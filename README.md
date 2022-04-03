@@ -1,7 +1,7 @@
 # WordPress_demo
 Terraform + Ansible deployment for WordPress server on AWS EC2 instances
 
-##Requirements
+## Requirements
 0) Using Terraform create simple AWS resources(EC2 instances within custom VPC) for this deployment.
 1) Using Ansible create an automated provision scenario, which deploys a highly available WordPress website.
 2) Stack is - Percona MySQL on a separate server, two application backends, and Traefik as a proxy server.
@@ -10,6 +10,7 @@ Terraform + Ansible deployment for WordPress server on AWS EC2 instances
 5) Keep used secrets in the repository in a secure way.
 6) Make sure your README tells us how to run it.
 
-##AWS Architecture
+## AWS Architecture
 AWS Architecture due to Requirement #2
+
 ![AWS Architecture](docs/WordPress_demo.drawio.svg)
