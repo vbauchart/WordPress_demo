@@ -1,0 +1,61 @@
+---
+- name: Proxy host
+  hosts: proxy
+  vars:
+    ansible_python_interpreter: auto
+  roles:
+    - common
+  become: true
+
+  tasks:
+  - name: traefik - check deployment exists
+    stat:
+      path: /usr/local/bin/traefik
+    register: traefik_bin
+
+  - name: traefik - deploy package
+    unarchive:
+      src: https://github.com/traefik/traefik/releases/download/v2.6.3/traefik_v2.6.3_linux_amd64.tar.gz
+      dest: /tmp/
+      remote_src: yes
+      mode: 0744
+    when: not traefik_bin.stat.exists
+
+  - name: traefik - Move deployment to bin directory
+    command: mv /tmp/traefik /usr/local/bin/
+    when: not traefik_bin.stat.exists
+
+  - name: traefik - Copy service file
+    copy:
+      src: resources/traefik.service
+      dest: /usr/lib/systemd/system/traefik.service
+      mode: 0644
+
+  - name: traefik - Create target directory
+    file:
+      path: /etc/traefik
+      state: directory
+      mode: 0755
+
+  - name: traefik - Copy static config
+    copy:
+      src: resources/traefik.yml
+      dest: /etc/traefik/traefik.yml
+    notify:
+      - Restart traefik
+
+  - name: traefik - Copy dynamic config
+    template:
+      src: resources/dynamic.yml.j2
+      dest: /etc/traefik/dynamic.yml
+
+  - name: traefik - Start service
+    service:
+      name: traefik
+      state: started
+
+  handlers:
+  - name: Restart traefik
+    service:
+      name: traefik
+      state: started

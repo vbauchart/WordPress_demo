@@ -1,0 +1,13 @@
+http:
+  routers:
+    wordpress-router:
+      entryPoints:
+        - "web"
+      rule: "PathPrefix(`/`)"
+      service: wordpress-service
+  services:
+    wordpress-service:
+      loadBalancer:
+        servers:
+        - url: "http://{{ groups['web'].0 }}:80/"
+        - url: "http://{{ groups['web'].1 }}:80/"

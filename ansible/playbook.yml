@@ -1,0 +1,12 @@
+---
+- import_playbook: db.yml
+- import_playbook: web.yml
+- import_playbook: proxy.yml
+
+- name: Complete playbook execution
+  hosts: proxy
+  gather_facts: no
+  tasks:
+  - name: Deployment complete
+    ansible.builtin.debug:
+      msg: WordPress site should be available at http://{{ groups['proxy'][0] }}/

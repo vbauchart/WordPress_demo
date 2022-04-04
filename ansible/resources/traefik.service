@@ -1,0 +1,8 @@
+[Unit]
+Description=Traefik service
+
+[Service]
+ExecStart=/usr/local/bin/traefik
+
+[Install]
+WantedBy=multi-user.target
