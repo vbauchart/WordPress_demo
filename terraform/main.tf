@@ -24,7 +24,4 @@ variable "ssh_key_file" {
   default = "~/.ssh/aws_word_press"
 }
 
-provider "aws" {
-  profile = "default"
-  region  = "eu-central-1"
-}
+provider "aws" {}

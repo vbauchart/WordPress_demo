@@ -2,7 +2,12 @@
 Terraform + Ansible deployment for WordPress server on AWS EC2 instances
 
 ## Deployment steps
-1) AWS acount
+1) Create AWS user with programmatic access and store its credentionals in `~/.aws/credentials`. User should have follow aws permisions:    
+```
+AmazonEC2FullAccess
+AmazonVPCFullAccess
+AmazonElasticFileSystemFullAccess
+```
 2) Generate ssh key pair. Default key file is`~/.ssh/aws_word_press` defined as *ssh_key_file* variable in the terraform/main.tf file     
 `ssh-keygen -b 4096 -t rsa -f ~/.ssh/aws_word_press`
 3) Create database password via ansible-vault. Execute next command from project root dirrectory.   
@@ -18,7 +23,6 @@ Terraform + Ansible deployment for WordPress server on AWS EC2 instances
    2) Check that `inventory.ini` file exists
    3) Execute ansible playbook vith your vault password    
    `ansible-playbook -i inventory.ini --ask-vault-password playbook.yml`
-
 
 ## Requirements
 0) Using Terraform create simple AWS resources (EC2 instances within custom VPC) for this deployment.
