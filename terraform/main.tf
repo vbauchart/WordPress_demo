@@ -9,9 +9,14 @@ terraform {
   required_version = ">= 1.1.7"
 }
 
-provider "aws" {
-  profile = "default"
-  region  = "eu-central-1"
+variable "aws_region_name" {
+  type    = string
+  default = "eu-central-1"
+}
+
+variable "aws_az_name" {
+  type    = string
+  default = "eu-central-1a"
 }
 
 variable "ssh_key_file" {
@@ -19,7 +24,7 @@ variable "ssh_key_file" {
   default = "~/.ssh/aws_word_press"
 }
 
-variable "bastion_ssh_port" {
-  type    = number
-  default = 7710
+provider "aws" {
+  profile = "default"
+  region  = "eu-central-1"
 }

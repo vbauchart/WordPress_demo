@@ -1,104 +1,102 @@
 
 # VPC
-resource "aws_vpc" "terra_vpc" {
+resource "aws_vpc" "wordpress" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "Terra_demo"
+    Name = "wordpress"
   }
 }
 
 # VPC/subnet
-resource "aws_subnet" "terra_subnet_public" {
-  vpc_id                  = aws_vpc.terra_vpc.id
+resource "aws_subnet" "wordpress_public" {
+  vpc_id                  = aws_vpc.wordpress.id
   cidr_block              = "10.1.1.0/24"
   availability_zone       = "eu-central-1a"
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "Terra_001_public"
+    Name = "wordpress_public"
   }
 }
 
-resource "aws_subnet" "terra_subnet_private" {
-  vpc_id            = aws_vpc.terra_vpc.id
+resource "aws_subnet" "wordpress_private" {
+  vpc_id            = aws_vpc.wordpress.id
   cidr_block        = "10.1.2.0/24"
   availability_zone = "eu-central-1a"
 
   tags = {
-    Name = "Terra_002_private"
+    Name = "wordpress_private"
   }
 }
 
 # VPC/gateway
-resource "aws_internet_gateway" "terra_gateway" {
-  vpc_id = aws_vpc.terra_vpc.id
+resource "aws_internet_gateway" "wordpress" {
+  vpc_id = aws_vpc.wordpress.id
 
   tags = {
-    Name = "Terra_gateway"
+    Name = "wordpress"
   }
 }
 
-resource "aws_eip" "terra_ip" {
+resource "aws_eip" "wordpress_nat" {
   vpc = true
   tags = {
-    Name = "Terra_ip"
-    Env  = "dev"
+    Name = "wordpress_nat"
   }
 }
 
-resource "aws_nat_gateway" "terra" {
-  allocation_id = aws_eip.terra_ip.id
-  subnet_id     = aws_subnet.terra_subnet_public.id
+resource "aws_nat_gateway" "wordpress" {
+  allocation_id = aws_eip.wordpress_nat.id
+  subnet_id     = aws_subnet.wordpress_public.id
 
   tags = {
-    Name = "Terra_gw_NAT"
+    Name = "wordpress"
   }
 }
 
 # VPC/route
-resource "aws_route_table" "terra_rt_public" {
-  vpc_id = aws_vpc.terra_vpc.id
+resource "aws_route_table" "wordpress_public" {
+  vpc_id = aws_vpc.wordpress.id
 
   route {
     ipv6_cidr_block = "::/0"
-    gateway_id      = aws_internet_gateway.terra_gateway.id
+    gateway_id      = aws_internet_gateway.wordpress.id
   }
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.terra_gateway.id
+    gateway_id = aws_internet_gateway.wordpress.id
   }
 
   tags = {
-    Name = "terra_rt_public"
+    Name = "wordpress_public"
   }
 }
 
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.terra_subnet_public.id
-  route_table_id = aws_route_table.terra_rt_public.id
+  subnet_id      = aws_subnet.wordpress_public.id
+  route_table_id = aws_route_table.wordpress_public.id
 }
 
 resource "aws_default_route_table" "private" {
-  default_route_table_id = aws_vpc.terra_vpc.default_route_table_id
+  default_route_table_id = aws_vpc.wordpress.default_route_table_id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.terra.id
+    nat_gateway_id = aws_nat_gateway.wordpress.id
   }
 
   tags = {
-    Name = "terra_rt_private"
+    Name = "wordpress_private"
   }
 }
 
 # VPC/Security groups
-
-resource "aws_security_group" "terra_dmz" {
-  name        = "terra_dmz"
+resource "aws_security_group" "wordpress_dmz" {
+  name        = "wordpress_dmz"
   description = "Allow ssh and http inbound traffic"
-  vpc_id      = aws_vpc.terra_vpc.id
+  vpc_id      = aws_vpc.wordpress.id
 
   ingress {
     description = "HTTP from world"
@@ -108,6 +106,7 @@ resource "aws_security_group" "terra_dmz" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # TLS certificates not implemented
   # ingress {
   #   description = "HTTPS from world"
   #   from_port   = 443
@@ -118,8 +117,8 @@ resource "aws_security_group" "terra_dmz" {
 
   ingress {
     description = "SSH from world"
-    from_port   = var.bastion_ssh_port
-    to_port     = var.bastion_ssh_port
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -132,20 +131,20 @@ resource "aws_security_group" "terra_dmz" {
   }
 
   tags = {
-    Name = "terra_dmz"
+    Name = "wordpress_dmz"
   }
 }
 
-resource "aws_security_group" "terra_private" {
-  name        = "terra_private"
+resource "aws_security_group" "wordpress_private" {
+  name        = "wordpress_private"
   description = "Allow inner network traffic"
-  vpc_id      = aws_vpc.terra_vpc.id
+  vpc_id      = aws_vpc.wordpress.id
 
   ingress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [aws_vpc.terra_vpc.cidr_block]
+    cidr_blocks = [aws_vpc.wordpress.cidr_block]
   }
 
   egress {
@@ -156,6 +155,6 @@ resource "aws_security_group" "terra_private" {
   }
 
   tags = {
-    Name = "terra_private"
+    Name = "wordpress_private"
   }
 }

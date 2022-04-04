@@ -1,29 +1,45 @@
-# EC2
+# KEYS
 variable "ami_image" {
-  type    = number
-  default = 7710
+  type    = string
+  default = "ami-0245697ee3e07e755"
 }
 
-resource "aws_key_pair" "terra_key" {
-  key_name   = "terra_key"
+resource "aws_key_pair" "wp_key" {
+  key_name   = "wordpress_key"
   public_key = file("${var.ssh_key_file}.pub")
 }
 
+# EFS Single AZ
+resource "aws_efs_file_system" "web_content" {
+  creation_token         = "web_content"
+  encrypted              = true
+  availability_zone_name = "eu-central-1a"
+
+  lifecycle_policy {
+    transition_to_ia = "AFTER_30_DAYS"
+  }
+
+  tags = {
+    Name = "web_content"
+  }
+}
+
+resource "aws_efs_mount_target" "private_subnet" {
+  file_system_id = aws_efs_file_system.web_content.id
+  subnet_id      = aws_subnet.wordpress_private.id
+  security_groups = [aws_security_group.wordpress_private.id]
+}
+
+#EC2 instances
 resource "aws_instance" "proxy" {
   ami                    = var.ami_image
   instance_type          = "t2.micro"
-  key_name               = "terra_key"
-  subnet_id              = aws_subnet.terra_subnet_public.id
-  vpc_security_group_ids = [aws_security_group.terra_dmz.id]
-  user_data              = <<EOF
-#!/bin/sh
-# change default ssh port on public host
-sed -i "s/#Port .*/Port ${var.bastion_ssh_port}/" /etc/ssh/sshd_config
-service sshd restart
-EOF
+  key_name               = "wordpress_key"
+  subnet_id              = aws_subnet.wordpress_public.id
+  vpc_security_group_ids = [aws_security_group.wordpress_dmz.id]
 
   tags = {
-    Name = "Terra_proxy"
+    Name = "wordpress_proxy"
   }
 }
 
@@ -31,24 +47,23 @@ resource "aws_instance" "web" {
   count                  = 2
   ami                    = var.ami_image
   instance_type          = "t2.micro"
-  key_name               = "terra_key"
-  subnet_id              = aws_subnet.terra_subnet_private.id
-  vpc_security_group_ids = [aws_security_group.terra_private.id]
+  key_name               = "wordpress_key"
+  subnet_id              = aws_subnet.wordpress_private.id
+  vpc_security_group_ids = [aws_security_group.wordpress_private.id]
 
   tags = {
-    Name = "Terra_web_${count.index}"
+    Name = "wordpress_web_${count.index}"
   }
 }
 
 resource "aws_instance" "db" {
   ami                    = var.ami_image
   instance_type          = "t2.micro"
-  key_name               = "terra_key"
-  subnet_id              = aws_subnet.terra_subnet_private.id
-  vpc_security_group_ids = [aws_security_group.terra_private.id]
+  key_name               = "wordpress_key"
+  subnet_id              = aws_subnet.wordpress_private.id
+  vpc_security_group_ids = [aws_security_group.wordpress_private.id]
 
   tags = {
-    Name = "Terra_db"
+    Name = "wordpress_db"
   }
 }
-
