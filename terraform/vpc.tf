@@ -93,8 +93,8 @@ resource "aws_default_route_table" "private" {
 }
 
 # VPC/Security groups
-resource "aws_security_group" "wordpress_dmz" {
-  name        = "wordpress_dmz"
+resource "aws_security_group" "wordpress_public" {
+  name        = "wordpress_public"
   description = "Allow ssh and http inbound traffic"
   vpc_id      = aws_vpc.wordpress.id
 
@@ -135,16 +135,23 @@ resource "aws_security_group" "wordpress_dmz" {
   }
 }
 
-resource "aws_security_group" "wordpress_private" {
-  name        = "wordpress_private"
+resource "aws_security_group" "wordpress_web" {
+  name        = "wordpress_web"
   description = "Allow inner network traffic"
   vpc_id      = aws_vpc.wordpress.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [aws_vpc.wordpress.cidr_block]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.wordpress_public.cidr_block]
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.wordpress_public.cidr_block]
   }
 
   egress {
@@ -155,6 +162,60 @@ resource "aws_security_group" "wordpress_private" {
   }
 
   tags = {
-    Name = "wordpress_private"
+    Name = "wordpress_web"
+  }
+}
+
+resource "aws_security_group" "wordpress_db" {
+  name        = "wordpress_db"
+  description = "Allow inner network traffic"
+  vpc_id      = aws_vpc.wordpress.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.wordpress_public.cidr_block]
+  }
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.wordpress_private.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "wordpress_db"
+  }
+}
+resource "aws_security_group" "wordpress_nfs" {
+  name        = "wordpress_nfs"
+  description = "Allow inner network traffic"
+  vpc_id      = aws_vpc.wordpress.id
+
+  ingress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.wordpress_private.cidr_block]
+  }
+
+  egress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = [aws_subnet.wordpress_private.cidr_block]
+  }
+
+  tags = {
+    Name = "wordpress_nfs"
   }
 }
