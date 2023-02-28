@@ -17,10 +17,17 @@ AmazonElasticFileSystemFullAccess
    3) Deploy terraform configuration to AWS  
    `terraform apply`
 4) Provide ansible configurations
-   1) Open directory with ansible configurations
-   2) Check that `inventory.ini` file exists
-   3) Execute ansible playbook with vault password `ansible`   
-   `ansible-playbook --ask-vault-password playbook.yml`
+   1) Install ansible requirements
+
+   `$ ansible-galaxy collection install ansible.posix`
+
+   `$ ansible-galaxy collection install community.mysql`
+   
+   2) Open directory with ansible configurations
+   3) Check that `inventory.ini` file exists
+   4) Execute ansible playbook with vault password `ansible`
+
+   `$ ansible-playbook --ask-vault-password playbook.yml`
 
 ## Requirements
 0) Using Terraform create simple AWS resources (EC2 instances within custom VPC) for this deployment.
