@@ -12,7 +12,7 @@ resource "aws_vpc" "wordpress" {
 resource "aws_subnet" "wordpress_public" {
   vpc_id                  = aws_vpc.wordpress.id
   cidr_block              = "10.1.1.0/24"
-  availability_zone       = "eu-central-1a"
+  availability_zone       = "eu-west-3a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -23,7 +23,7 @@ resource "aws_subnet" "wordpress_public" {
 resource "aws_subnet" "wordpress_private" {
   vpc_id            = aws_vpc.wordpress.id
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "eu-central-1a"
+  availability_zone = "eu-west-3a"
 
   tags = {
     Name = "wordpress_private"

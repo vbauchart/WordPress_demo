@@ -13,7 +13,7 @@ resource "aws_key_pair" "wp_key" {
 resource "aws_efs_file_system" "web_content" {
   creation_token         = "web_content"
   encrypted              = true
-  availability_zone_name = "eu-central-1a"
+  availability_zone_name = "eu-west-3a"
 
   lifecycle_policy {
     transition_to_ia = "AFTER_30_DAYS"

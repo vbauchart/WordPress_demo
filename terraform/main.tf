@@ -11,12 +11,12 @@ terraform {
 
 variable "aws_region_name" {
   type    = string
-  default = "eu-central-1"
+  default = "eu-west-3"
 }
 
 variable "aws_az_name" {
   type    = string
-  default = "eu-central-1a"
+  default = "eu-west-3a"
 }
 
 variable "ssh_key_file" {
