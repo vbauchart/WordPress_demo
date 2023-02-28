@@ -1,7 +1,7 @@
 # KEYS
 variable "ami_image" {
   type    = string
-  default = "ami-0245697ee3e07e755"
+  default = "ami-05bfef86a955a699e"
 }
 
 resource "aws_key_pair" "wp_key" {
