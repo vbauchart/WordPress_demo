@@ -8,91 +8,91 @@
   become: true
 
   tasks:
-  - name: Gather the package facts
-    ansible.builtin.package_facts:
-      manager: auto
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: auto
 
-  - name: NFS - install dependencies
-    apt:
-      name: nfs-common
-      state: present
-      update_cache: yes
-      cache_valid_time: 86400 #One day
+    - name: NFS - install dependencies
+      apt:
+        name: nfs-common
+        state: present
+        update_cache: true
+        cache_valid_time: 86400 #One day
 
-  - name: NFS - Mount wp-content volume
-    ansible.posix.mount:
-      src: "{{ nfs_wp_content_ip }}"
-      path: /var/www/wordpress/wp-content
-      fstype: nfs4
-      opts: nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev
-      state: mounted
-      boot: yes
+    - name: NFS - Mount wp-content volume
+      ansible.posix.mount:
+        src: "{{ nfs_wp_content_ip }}"
+        path: /var/www/wordpress/wp-content
+        fstype: nfs4
+        opts: nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev
+        state: mounted
+        boot: true
 
-  - name: wordpress - install dependencies
-    apt:
-      name:
-        - apache2
-        - php7.4
-        - libapache2-mod-php7.4
-        - php7.4-common
-        - php7.4-mbstring
-        - php7.4-xmlrpc
-        - php7.4-soap
-        - php7.4-gd
-        - php7.4-xml
-        - php7.4-intl
-        - php7.4-mysql
-        - php7.4-cli
-        - php7.4-ldap
-        - php7.4-zip
-        - php7.4-curl
-      state: present
-      update_cache: yes
-      cache_valid_time: 86400 #One day
+    - name: wordpress - install dependencies
+      apt:
+        name:
+          - apache2
+          - php7.4
+          - libapache2-mod-php7.4
+          - php7.4-common
+          - php7.4-mbstring
+          - php7.4-xmlrpc
+          - php7.4-soap
+          - php7.4-gd
+          - php7.4-xml
+          - php7.4-intl
+          - php7.4-mysql
+          - php7.4-cli
+          - php7.4-ldap
+          - php7.4-zip
+          - php7.4-curl
+        state: present
+        update_cache: true
+        cache_valid_time: 86400 #One day
 
-  - name: wordpress - check deployment exists
-    stat:
-      path: /var/www/wordpress/wp-config.php
-    register: wordpress_config
+    - name: wordpress - check deployment exists
+      stat:
+        path: /var/www/wordpress/wp-config.php
+      register: wordpress_config
 
-  - name: wordpress - deploy package
-    unarchive:
-      src: https://wordpress.org/latest.tar.gz
-      dest: /var/www/
-      remote_src: yes
-      owner: www-data
-      group: www-data
-    when: not wordpress_config.stat.exists
+    - name: wordpress - deploy package
+      unarchive:
+        src: https://wordpress.org/latest.tar.gz
+        dest: /var/www/
+        remote_src: true
+        owner: www-data
+        group: www-data
+      when: not wordpress_config.stat.exists
 
-  - name: wordpress - Copy sample config file
-    command: cp /var/www/wordpress/wp-config-sample.php /var/www/wordpress/wp-config.php
-    when: not wordpress_config.stat.exists
+    - name: wordpress - Copy sample config file
+      command: cp /var/www/wordpress/wp-config-sample.php /var/www/wordpress/wp-config.php
+      when: not wordpress_config.stat.exists
 
-  - name: wordpress - Update Wordpress config file
-    lineinfile:
-      path: /var/www/wordpress/wp-config.php
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-    no_log: yes
-    with_items:
-      - {'regexp': "define\\( 'DB_NAME', '(.)+' \\);", 'line': "define( 'DB_NAME', '{{ mysql_db_name }}' );"}
-      - {'regexp': "define\\( 'DB_USER', '(.)+' \\);", 'line': "define( 'DB_USER', '{{ mysql_user }}' );"}
-      - {'regexp': "define\\( 'DB_PASSWORD', '(.)+' \\);", 'line': "define( 'DB_PASSWORD', '{{ mysql_password }}' );"}
-      - {'regexp': "define\\( 'DB_HOST', '(.)+' \\);", 'line': "define( 'DB_HOST', '{{ groups['db'].0 }}' );"}
+    - name: wordpress - Update Wordpress config file
+      lineinfile:
+        path: /var/www/wordpress/wp-config.php
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      no_log: true
+      with_items:
+        - { regexp: "define\\( 'DB_NAME', '(.)+' \\);", line: "define( 'DB_NAME', '{{ mysql_db_name }}' );" }
+        - { regexp: "define\\( 'DB_USER', '(.)+' \\);", line: "define( 'DB_USER', '{{ mysql_user }}' );" }
+        - { regexp: "define\\( 'DB_PASSWORD', '(.)+' \\);", line: "define( 'DB_PASSWORD', '{{ mysql_password }}' );" }
+        - { regexp: "define\\( 'DB_HOST', '(.)+' \\);", line: "define( 'DB_HOST', '{{ groups['db'].0 }}' );" }
 
 
-  - name: wordpress - Update Apache config file
-    lineinfile:
-      path: /etc/apache2/sites-available/000-default.conf
-      regexp: "DocumentRoot \\/var\\/www\\/html"
-      line: "DocumentRoot /var/www/wordpress"
-    notify:
-    - Restart apache
+    - name: wordpress - Update Apache config file
+      lineinfile:
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: DocumentRoot \/var\/www\/html
+        line: DocumentRoot /var/www/wordpress
+      notify:
+        - Restart apache
 
-  - name: Check apache started
-    service:
-      name: apache2
-      state: started
+    - name: Check apache started
+      service:
+        name: apache2
+        state: started
 
   handlers:
     - name: Restart apache

@@ -8,48 +8,48 @@
   become: true
 
   tasks:
-  - name: Gather the package facts
-    ansible.builtin.package_facts:
-      manager: auto
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: auto
 
-  - name: percona - install dependencies
-    apt:
-      name:
-        - gnupg2
-        - python3-pip
-      state: present
-      update_cache: yes
-    when: "'percona-server-server-5.7' not in ansible_facts.packages"
+    - name: percona - install dependencies
+      apt:
+        name:
+          - gnupg2
+          - python3-pip
+        state: present
+        update_cache: true
+      when: "'percona-server-server-5.7' not in ansible_facts.packages"
 
-  - name: percona - install percona repository
-    apt:
-      deb: https://repo.percona.com/apt/percona-release_latest.buster_all.deb
-    when: "'percona-release' not in ansible_facts.packages"
+    - name: percona - install percona repository
+      apt:
+        deb: https://repo.percona.com/apt/percona-release_latest.buster_all.deb
+      when: "'percona-release' not in ansible_facts.packages"
 
-  - name: percona - install percona server
-    apt:
-      name: percona-server-server-5.7
-      state: latest
-      update_cache: yes
-    when: "'percona-server-server-5.7' not in ansible_facts.packages"
+    - name: percona - install percona server
+      apt:
+        name: percona-server-server-5.7
+        state: latest
+        update_cache: true
+      when: "'percona-server-server-5.7' not in ansible_facts.packages"
 
-# Setup percona users
-  - name: Install bottle python package
-    pip:
-      name: PyMySQL
+    # Setup percona users
+    - name: Install bottle python package
+      pip:
+        name: PyMySQL
 
-  - name: percona - create database
-    mysql_db:
-      login_unix_socket: /var/run/mysqld/mysqld.sock
-      name: '{{ mysql_db_name }}'
-      state: present
+    - name: percona - create database
+      mysql_db:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{ mysql_db_name }}"
+        state: present
 
-  - name: percona - set remote user
-    mysql_user:
-      login_unix_socket: /var/run/mysqld/mysqld.sock
-      name: '{{ mysql_user }}'
-      host: '{{ item }}'
-      password: '{{ mysql_password }}'
-      priv: "{{ mysql_db_name }}.*:ALL"
-      state: present
-    with_items:  "{{ groups['web'] }}"
+    - name: percona - set remote user
+      mysql_user:
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+        name: "{{ mysql_user }}"
+        host: "{{ item }}"
+        password: "{{ mysql_password }}"
+        priv: "{{ mysql_db_name }}.*:ALL"
+        state: present
+      with_items: "{{ groups['web'] }}"

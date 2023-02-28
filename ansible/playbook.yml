@@ -5,8 +5,8 @@
 
 - name: Complete playbook execution
   hosts: proxy
-  gather_facts: no
+  gather_facts: false
   tasks:
-  - name: Deployment complete
-    ansible.builtin.debug:
-      msg: WordPress site should be available at http://{{ groups['proxy'][0] }}/
+    - name: Deployment complete
+      ansible.builtin.debug:
+        msg: WordPress site should be available at http://{{ groups['proxy'][0] }}/
